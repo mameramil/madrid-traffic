@@ -1,5 +1,6 @@
 """
 Streamlit dashboard for Urban Queue Ontology.
+Includes pipeline, advanced stats, optimizer, and Kalman + Monte Carlo.
 """
 
 import streamlit as st
@@ -17,18 +18,28 @@ from queue_ontology.advanced_stats import (
     waiting_time_percentiles,
     stochastic_green_optimizer,
 )
+from queue_ontology.advanced_models import (
+    ArrivalRateKalman,
+    monte_carlo_queue_simulation,
+    kalman_then_monte_carlo,
+)
 
 st.set_page_config(page_title="Urban Queue Ontology", layout="wide")
 st.title("Urban Queue Ontology")
-st.markdown("**Ontology + Queue Theory + Advanced Statistics for traffic decision support**")
+st.markdown("**Ontology + Queue Theory + Advanced Statistics + Kalman & Monte Carlo**")
 
-tab1, tab2, tab3 = st.tabs(["Pipeline Results", "Advanced Statistics", "Interactive Optimizer"])
+tab1, tab2, tab3, tab4 = st.tabs([
+    "Pipeline Results",
+    "Advanced Statistics",
+    "Interactive Optimizer",
+    "Kalman + Monte Carlo"
+])
 
 with tab1:
     st.subheader("End-to-end Pipeline")
     n_sensors = st.slider("Number of synthetic sensors", 4, 12, 6)
     if st.button("Run Pipeline"):
-        with st.spinner("Building ontology and computing metrics..."):
+        with st.spinner("Building ontology..."):
             onto, results = run_pipeline(n_sensors)
         st.success(f"Ontology built with {len(onto.objects)} objects")
         rows = []
@@ -43,27 +54,26 @@ with tab1:
                 "Wait (min)": round(m.get("avg_wait_system_min", 0), 2) if "error" not in m else None,
                 "Utilization": f"{m.get('utilization', 0):.0%}" if "error" not in m else "UNSTABLE",
             })
-        df = pd.DataFrame(rows)
-        st.dataframe(df, use_container_width=True)
+        st.dataframe(pd.DataFrame(rows), use_container_width=True)
         valid = [r for r in results if "error" not in r["metrics"]]
         if valid:
-            chart_data = pd.DataFrame({
+            chart = pd.DataFrame({
                 "Segment": [r["segment_id"] for r in valid],
                 "Wait (min)": [r["metrics"].get("avg_wait_system_min", 0) for r in valid],
             })
-            st.bar_chart(chart_data.set_index("Segment"))
+            st.bar_chart(chart.set_index("Segment"))
 
 with tab2:
     st.subheader("Advanced Statistical Analysis")
     c1, c2, c3 = st.columns(3)
     with c1:
-        arr = st.number_input("Arrival rate (veh/h)", 400, 2500, 1200)
+        arr = st.number_input("Arrival rate (veh/h)", 400, 2500, 1200, key="arr2")
     with c2:
-        arr_std = st.number_input("Arrival std", 50, 400, 180)
+        arr_std = st.number_input("Arrival std", 50, 400, 180, key="std2")
     with c3:
-        srv = st.number_input("Service rate (veh/h)", 800, 3000, 1600)
+        srv = st.number_input("Service rate (veh/h)", 800, 3000, 1600, key="srv2")
     if st.button("Run Advanced Analysis"):
-        with st.spinner("Computing bootstrap CIs..."):
+        with st.spinner("Computing..."):
             rng = np.random.default_rng(42)
             samples = np.clip(rng.normal(arr, arr_std, 50), 300, 2500)
             boot = bootstrap_queue_metrics(samples, srv, 1, n_bootstrap=400)
@@ -75,12 +85,12 @@ with tab2:
             b.metric("Utilization CI", f"{boot['utilization_ci'][0]:.0%} – {boot['utilization_ci'][1]:.0%}")
             c.metric("P90 Wait CI", f"{boot['p90_wait_ci'][0]:.2f} – {boot['p90_wait_ci'][1]:.2f}")
         st.write("**Waiting time percentiles**")
-        pct_df = pd.DataFrame([{"Percentile": f"P{int(p*100)}", "Wait (min)": round(v, 2)} for p, v in pcts.items()])
-        st.dataframe(pct_df, use_container_width=True)
+        st.dataframe(pd.DataFrame([
+            {"Percentile": f"P{int(p*100)}", "Wait (min)": round(v, 2)} for p, v in pcts.items()
+        ]), use_container_width=True)
 
 with tab3:
     st.subheader("Stochastic Green Time Optimizer")
-    st.markdown("Optimizes green ratio under arrival uncertainty (minimizes expected P90 wait).")
     o1, o2 = st.columns(2)
     with o1:
         opt_arr = st.slider("Base arrival rate", 600, 2000, 1100)
@@ -95,5 +105,45 @@ with tab3:
         eval_df = pd.DataFrame(opt["evaluated"], columns=["Green fraction", "Expected P90"])
         st.line_chart(eval_df.set_index("Green fraction"))
 
+with tab4:
+    st.subheader("Kalman Filter + Monte Carlo Simulation")
+    st.markdown("Estimates true arrival rate from noisy observations, then simulates the queue.")
+
+    k1, k2, k3 = st.columns(3)
+    with k1:
+        true_lam = st.number_input("True arrival rate", 600, 2000, 1250, key="true_lam")
+    with k2:
+        noise = st.number_input("Observation noise (std)", 50, 300, 120, key="noise")
+    with k3:
+        srv_mc = st.number_input("Service rate", 1000, 2500, 1600, key="srv_mc")
+
+    n_obs = st.slider("Number of observations", 10, 60, 30)
+    n_mc = st.slider("Monte Carlo simulations", 100, 800, 300)
+
+    if st.button("Run Kalman + Monte Carlo"):
+        with st.spinner("Filtering and simulating..."):
+            rng = np.random.default_rng(42)
+            observations = np.clip(rng.normal(true_lam, noise, n_obs), 300, 2500)
+            result = kalman_then_monte_carlo(observations, service_rate=srv_mc, c=1, n_mc=n_mc)
+
+        st.success(f"Kalman estimated arrival rate: **{result['estimated_arrival_rate']:.0f} veh/h**")
+
+        mc = result["monte_carlo"]
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Mean wait", f"{mc['mean_wait_min']:.2f} min")
+        m2.metric("Median wait", f"{mc['median_wait_min']:.2f} min")
+        m3.metric("P90 wait", f"{mc['p90_wait_min']:.2f} min")
+        m4.metric("P95 wait", f"{mc['p95_wait_min']:.2f} min")
+
+        st.metric("Mean utilization", f"{mc['mean_utilization']:.0%}")
+        st.write(f"Utilization 95% CI: [{mc['utilization_ci'][0]:.0%}, {mc['utilization_ci'][1]:.0%}]")
+
+        filtered = result["filtered_series"]
+        chart_df = pd.DataFrame({
+            "Observation": observations,
+            "Kalman estimate": filtered,
+        })
+        st.line_chart(chart_df)
+
 st.markdown("---")
-st.caption("Urban Queue Ontology · Synthetic Madrid data · Queue theory + Bootstrap + Stochastic opt")
+st.caption("Urban Queue Ontology · Kalman filter · Monte Carlo · Bootstrap · Stochastic optimization")
