@@ -1,0 +1,19 @@
+sensor_id,road_name,hour,intensity_veh_h,lanes,service_rate_veh_h
+S001,Calle Alcalá,8,1420,2,1600
+S001,Calle Alcalá,9,1580,2,1600
+S001,Calle Alcalá,18,1490,2,1600
+S002,Paseo de la Castellana,8,1350,3,2100
+S002,Paseo de la Castellana,9,1620,3,2100
+S002,Paseo de la Castellana,18,1510,3,2100
+S003,Calle Gran Vía,8,1180,2,1500
+S003,Calle Gran Vía,9,1340,2,1500
+S003,Calle Gran Vía,18,1290,2,1500
+S004,Avenida de América,8,980,2,1400
+S004,Avenida de América,9,1120,2,1400
+S004,Avenida de América,18,1050,2,1400
+S005,Calle Serrano,8,870,1,1200
+S005,Calle Serrano,9,990,1,1200
+S005,Calle Serrano,18,940,1,1200
+S006,M-30 (salida A-2),8,2100,4,2800
+S006,M-30 (salida A-2),9,2450,4,2800
+S006,M-30 (salida A-2),18,2280,4,2800

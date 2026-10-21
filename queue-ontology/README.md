@@ -1,9 +1,5 @@
 # Urban Queue Ontology
 
-**Ontology-driven decision support system for urban traffic queues.**
-
-# Urban Queue Ontology
-
 **Decision support for urban traffic queues using ontology modeling, queueing theory, and advanced statistics.**
 
 This project models road segments and intersections as an ontology, estimates traffic intensity under uncertainty, and computes queue metrics (waiting times, utilization, percentiles) to support signal timing decisions.
@@ -25,4 +21,5 @@ we can identify bottlenecks and evaluate the impact of green-time changes with s
 ---
 
 ## Architecture
+
 
