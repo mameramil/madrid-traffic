@@ -2,8 +2,8 @@ from __future__ import annotations
 from typing import Dict, List, Tuple
 import random
 
-from ontology import Ontology, Sensor, RoadSegment, Intersection
-from queue_models import mm1_wait_time, mmc_wait_time
+from .ontology import Ontology, Sensor, RoadSegment, Intersection
+from .queue_models import mm1_wait_time, mmc_wait_time
 
 
 def generate_synthetic_madrid_data(num_sensors: int = 8, seed: int = 42) -> Dict:
