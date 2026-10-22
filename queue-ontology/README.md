@@ -26,7 +26,8 @@ By combining:
 
 we can identify bottlenecks and evaluate the impact of green-time changes with statistical confidence.
 
--## Approach
+
+## Approach
 
 1. **Data Pipeline** — Ingest, clean, and validate traffic intensity time series and sensor locations.
 2. **Ontology Layer** — Explicit objects (`Intersection`, `RoadSegment`, `Sensor`, `TrafficFlow`, `SignalPlan`), properties, links, and actions.
