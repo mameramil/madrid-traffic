@@ -1,25 +1,23 @@
 # Urban Queue Ontology
 
-**Decision support for urban traffic queues using ontology modeling, queueing theory, and advanced statistics.**
+**Ontology-based decision support for urban traffic queues.**
 
-This project models road segments and intersections as an ontology, estimates traffic intensity under uncertainty, and computes queue metrics (waiting times, utilization, percentiles) to support signal timing decisions.
+This project models road infrastructure as an ontology and applies queueing theory together with advanced statistical methods to estimate waiting times, identify bottlenecks, and support signal timing decisions under uncertainty.
 
-It is designed to demonstrate end-to-end ownership of a data-to-decision pipeline — from raw sensor observations to quantified recommendations.
+It demonstrates a complete data-to-decision pipeline: from noisy sensor observations to quantified recommendations with confidence intervals.
 
 ---
 
 ## Problem
 
-Urban intersections suffer from variable demand. Fixed signal plans waste capacity or create queues. By combining:
+Fixed traffic signal plans cannot adapt to variable demand. The result is either wasted capacity or growing queues. By representing the road network as an ontology and combining it with analytical and simulation-based queue models, it becomes possible to:
 
-- an **ontology** of sensors, road segments and intersections,
-- analytical and simulated **queueing models**,
-- and **uncertainty quantification** (Bayesian estimation, bootstrap, Kalman / particle filters),
-
-we can identify bottlenecks and evaluate the impact of green-time changes with statistical confidence.
+- Estimate true arrival rates from noisy sensor data
+- Compute waiting times and utilization with uncertainty quantification
+- Identify the most congested segments
+- Evaluate the impact of green-time changes before applying them
 
 ---
 
 ## Architecture
-
 
